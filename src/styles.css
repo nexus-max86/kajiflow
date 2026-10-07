@@ -1,1 +1,9 @@
-import "./styles.css";
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: #f4f7fb; color: #102a43; }
+main { max-width: 760px; margin: 0 auto; padding: 48px 20px; }
+h1 { margin-bottom: 6px; }
+.card { background: white; padding: 24px; margin-top: 20px; border-radius: 12px; box-shadow: 0 4px 18px #102a431a; }
+input { display: block; margin: 16px 0; }
+button { border: 0; border-radius: 8px; padding: 11px 18px; background: #d6a928; color: #102a43; font-weight: 700; cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+.card p { min-height: 22px; }
