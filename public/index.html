@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kajiflow — Gestion des bordereaux et matching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0c1b33;
+  --navy2:#10243e;
+  --navy3:#1a3358;
+  --gold:#d4aa3a;
+  --gold2:#e5c66a;
+  --gold3:#b68a2a;
+  --gold-pale:#f3d98b;
+  --ivory:#f7f4ec;
+  --ivory2:#fbfaf7;
+  --paper:#f2efe6;
+  --border:#ded7c9;
+  --border2:#ead9a8;
+  --text:#0c1b33;
+  --text2:#526074;
+  --text3:#6b7482;
+  --text4:#3e4c60;
+  --green:#2f6b4f;
+  --green-bg:#eef5f1;
+  --red:#8b3d36;
+  --red-bg:#f8eceb;
+  --yellow-bg:#fff8e7;
+  --yellow:#92400e;
+  --r:14px;
+  --r2:10px;
+  --r3:20px;
+  --sh:0 1px 3px rgba(12,27,51,.06),0 4px 16px rgba(12,27,51,.05);
+  --sh2:0 1px 2px rgba(12,27,51,.04);
+  --sh3:0 8px 32px rgba(12,27,51,.12);
+}
+html{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--text);background:var(--ivory);-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;background:none}
+input,select,textarea{font-family:inherit;outline:none}
+img{max-width:100%}
+
+/* ── APP SHELL ── */
+.app{display:flex;min-height:100vh}
+
+/* ── AUTH ── */
+.auth-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;
+  background:linear-gradient(160deg,var(--navy) 0%,#0a1e3c 60%,#081528 100%);
+  padding:32px 20px;
+}
+.auth-top{
+  text-align:center;margin-bottom:48px;
+}
+.auth-logo{
+  font-size:26px;font-weight:600;color:var(--gold);
+  letter-spacing:-.3px;display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.auth-logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(212,170,58,.15);border:1px solid rgba(212,170,58,.3);
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.auth-brand{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-style:italic;font-size:14px;color:rgba(255,255,255,.4);
+  margin-top:6px;
+}
+.auth-title-main{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:32px;font-weight:600;color:#fff;
+  margin-top:16px;line-height:1.2;
+}
+.auth-title-main em{font-style:italic;color:var(--gold2)}
+.auth-portals{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;width:100%;max-width:820px;
+}
+.auth-portal{
+  background:var(--ivory2);border-radius:var(--r);
+  padding:32px 24px 28px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;cursor:pointer;
+  border:2px solid transparent;
+  box-shadow:0 4px 24px rgba(0,0,0,.2);
+  transition:.2s ease;
+  position:relative;overflow:hidden;
+}
+.auth-portal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  border-radius:var(--r) var(--r) 0 0;
+}
+.auth-portal.deposant::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.auth-portal.comptable::before{background:linear-gradient(90deg,#2f6b4f,#52a07a)}
+.auth-portal.admin::before{background:linear-gradient(90deg,var(--navy),#2a4a7f)}
+.auth-portal:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.auth-portal.deposant:hover{border-color:var(--gold2)}
+.auth-portal.comptable:hover{border-color:#52a07a}
+.auth-portal.admin:hover{border-color:#4a7ac8}
+.portal-ico{
+  width:56px;height:56px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:16px;
+}
+.portal-ico.d{background:var(--yellow-bg);color:var(--gold3)}
+.portal-ico.c{background:var(--green-bg);color:var(--green)}
+.portal-ico.a{background:rgba(12,27,51,.08);color:var(--navy)}
+.portal-title{
+  font-size:17px;font-weight:600;color:var(--navy);
+  margin-bottom:6px;
+}
+.portal-desc{
+  font-size:12.5px;color:var(--text3);line-height:1.5;
+  margin-bottom:20px;flex:1;
+}
+.portal-btn{
+  width:100%;padding:10px;border-radius:30px;
+  font-size:13px;font-weight:600;
+  border:none;cursor:pointer;transition:.15s;
+}
+.portal-btn.d{background:var(--gold);color:var(--navy)}
+.portal-btn.d:hover{background:var(--gold2)}
+.portal-btn.c{background:var(--green);color:#fff}
+.portal-btn.c:hover{background:#3a8562}
+.portal-btn.a{background:var(--navy);color:#fff}
+.portal-btn.a:hover{background:var(--navy2)}
+.portal-tag{
+  position:absolute;top:12px;right:12px;
+  font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px;
+  text-transform:uppercase;letter-spacing:.6px;
+}
+.portal-tag.d{background:rgba(212,170,58,.15);color:var(--gold3)}
+.portal-tag.c{background:var(--green-bg);color:var(--green)}
+.portal-tag.a{background:rgba(12,27,51,.08);color:var(--navy2)}
+.auth-footer{
+  margin-top:28px;font-size:12px;
+  color:rgba(255,255,255,.3);text-align:center;
+}
+/* Login form modal */
+.auth-modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;
+  z-index:500;padding:20px;display:none;
+}
+.auth-modal-bg.show{display:flex}
+.auth-modal{
+  background:var(--ivory2);border-radius:var(--r);
+  padding:36px 32px;width:100%;max-width:380px;
+  box-shadow:var(--sh3);text-align:center;
+  position:relative;
+}
+.auth-modal-close{
+  position:absolute;top:14px;right:16px;
+  font-size:18px;color:var(--text3);cursor:pointer;
+  transition:.15s;
+}
+.auth-modal-close:hover{color:var(--text)}
+.auth-modal-ico{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin:0 auto 16px;
+}
+.auth-modal-title{font-size:19px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.auth-modal-sub{font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.5}
+.auth-field{text-align:left;margin-bottom:14px}
+.auth-field label{font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:5px}
+.auth-field input{
+  width:100%;padding:10px 12px;
+  border:1.5px solid var(--border);border-radius:var(--r2);
+  font-size:13.5px;color:var(--text);background:#fff;transition:.15s;
+}
+.auth-field input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(12,27,51,.07)}
+.auth-field input::placeholder{color:var(--text3)}
+.auth-error{
+  font-size:12px;color:var(--red);background:var(--red-bg);
+  padding:8px 12px;border-radius:var(--r2);margin-bottom:12px;
+  display:none;border:1px solid #f3bfbb;
+}
+.auth-error.show{display:block}
+@media(max-width:700px){
+  .auth-portals{grid-template-columns:1fr}
+  .auth-title-main{font-size:26px}
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:256px;flex-shrink:0;background:var(--navy);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;z-index:200;
+  transition:transform .25s ease;
+}
+.sb-header{
+  padding:22px 18px 16px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.sb-logo{
+  display:flex;align-items:center;gap:9px;
+  font-size:17px;font-weight:600;color:var(--gold);
+  letter-spacing:-.2px;
+}
+.sb-logo-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(212,170,58,.15);
+  border:1px solid rgba(212,170,58,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
+.sb-tagline{font-size:10.5px;color:rgba(255,255,255,.3);margin-top:2px;letter-spacing:.2px}
+.sb-nav{flex:1;padding:10px 10px;display:flex;flex-direction:column;gap:1px}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:var(--r2);
+  color:rgba(255,255,255,.55);font-size:13.5px;font-weight:400;
+  cursor:pointer;transition:.14s;position:relative;
+  user-select:none;
+}
+.sb-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+.sb-item.active{background:rgba(212,170,58,.13);color:var(--gold);font-weight:500}
+.sb-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:16px;background:var(--gold);border-radius:0 2px 2px 0;
+}
+.sb-icon{width:18px;text-align:center;flex-shrink:0;font-size:14px}
+.sb-notif{
+  margin-left:auto;background:var(--red-bg);color:var(--red);
+  font-size:10px;font-weight:700;min-width:17px;height:17px;
+  padding:0 4px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+}
+.sb-divider{height:1px;background:rgba(255,255,255,.06);margin:6px 8px}
+.sb-footer{
+  padding:12px 10px 18px;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.sb-user{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 8px;border-radius:var(--r2);cursor:pointer;
+  transition:.14s;
+}
+.sb-user:hover{background:rgba(255,255,255,.05)}
+.sb-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(212,170,58,.3),rgba(212,170,58,.1));
+  border:1px solid rgba(212,170,58,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--gold);font-weight:600;flex-shrink:0;
+}
+.sb-uname{font-size:12.5px;color:rgba(255,255,255,.8);font-weight:500;line-height:1.3}
+.sb-uemail{font-size:11px;color:rgba(255,255,255,.35)}
+.sb-role-pill{
+  font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:10px;
+  text-transform:uppercase;letter-spacing:.4px;
+  background:rgba(212,170,58,.15);color:var(--gold-pale);
+  margin-top:2px;display:inline-block;
+}
+.sb-logout{
+  display:flex;align-items:center;gap:6px;
+  font-size:11.5px;color:rgba(255,255,255,.35);
+  padding:6px 8px;margin-top:4px;border-radius:var(--r2);
+  cursor:pointer;transition:.14s;
+}
+.sb-logout:hover{color:rgba(255,255,255,.6);background:rgba(255,255,255,.04)}
+
+/* ── MAIN ── */
+.main{margin-left:256px;flex:1;min-height:100vh}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:.5;transform:translateY(4px)}to{opacity:1;transform:none}}
+.section{padding:32px 36px}
+
+/* ── TYPOGRAPHY ── */
+.eyebrow{
+  font-size:10.5px;font-weight:600;color:var(--gold);
+  text-transform:uppercase;letter-spacing:1.8px;margin-bottom:7px;
+}
+.h1{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:36px;font-weight:600;color:var(--navy);
+  line-height:1.15;letter-spacing:-.3px;
+}
+.h1 em{font-style:italic;font-weight:400}
+.h1-lg{font-size:42px}
+.h2{font-size:16px;font-weight:600;color:var(--navy)}
+.h3{font-size:14px;font-weight:600;color:var(--navy)}
+.subtitle{font-size:13.5px;color:var(--text2);line-height:1.55;margin-top:4px}
+.label{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,#0a1a2e 100%);
+  border-radius:var(--r);padding:40px 44px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:320px;height:320px;
+  background:radial-gradient(circle,rgba(212,170,58,.1) 0%,transparent 65%);
+  pointer-events:none;
+}
+.hero-eyebrow{color:rgba(212,170,58,.75);margin-bottom:10px}
+.hero-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:44px;font-weight:600;color:#fff;line-height:1.1;
+}
+.hero-title em{font-style:italic;font-weight:400;color:var(--gold2)}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.6);margin-top:12px;max-width:500px;line-height:1.6}
+.hero-actions{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn-gold{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--gold);color:var(--navy);
+  font-weight:600;font-size:13.5px;
+  padding:10px 22px;border-radius:30px;
+  border:none;cursor:pointer;transition:.15s;
+}
+.btn-gold:hover{background:var(--gold2)}
+.btn-gold:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.1);color:#fff;
+  font-weight:500;font-size:13.5px;
+  padding:10px 20px;border-radius:30px;
+  border:1px solid rgba(255,255,255,.18);cursor:pointer;transition:.15s;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-navy{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--navy);color:#fff;
+  font-weight:600;font-size:13px;
+  padding:9px 18px;border-radius:30px;
+  border:none;cursor:pointer;transition:.15s;
+}
+.btn-navy:hover{background:var(--navy2)}
+.btn-navy:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#fff;color:var(--text);
+  font-weight:500;font-size:12.5px;
+  padding:7px 14px;border-radius:30px;
+  border:1.5px solid var(--border);cursor:pointer;transition:.15s;
+}
+.btn-outline:hover{border-color:var(--navy);color:var(--navy)}
+.btn-sm{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#fff;color:var(--text2);
+  font-weight:500;font-size:12px;
+  padding:6px 12px;border-radius:20px;
+  border:1px solid var(--border);cursor:pointer;transition:.15s;white-space:nowrap;
+}
+.btn-sm:hover{border-color:var(--text2)}
+.btn-validate{
+  background:var(--navy);color:#fff;font-size:12px;font-weight:600;
+  padding:7px 14px;border-radius:20px;cursor:pointer;border:none;transition:.15s;
+}
+.btn-validate:hover{background:var(--navy2)}
+.btn-fix{
+  background:#fff;color:var(--text);font-size:12px;font-weight:500;
+  padding:7px 14px;border-radius:20px;cursor:pointer;
+  border:1px solid var(--border);transition:.15s;
+}
+.btn-fix:hover{border-color:var(--navy)}
+.btn-detail{
+  background:#fff;color:var(--text3);font-size:12px;font-weight:500;
+  padding:7px 14px;border-radius:20px;cursor:pointer;
+  border:1px solid var(--border);transition:.15s;
+}
+.btn-confirm{background:#d4edda;color:var(--green);font-size:12px;font-weight:600;padding:7px 14px;border-radius:20px;cursor:pointer;border:1px solid #b8dfc4;transition:.15s}
+.btn-reject{background:var(--red-bg);color:var(--red);font-size:12px;font-weight:600;padding:7px 14px;border-radius:20px;cursor:pointer;border:1px solid #f3bfbb;transition:.15s}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh2)}
+.card-pad{padding:24px}
+.card-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.card-body-pad{padding:20px}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+.stat-card{
+  background:#fff;border:1px solid var(--border);
+  border-radius:var(--r);padding:20px 18px;box-shadow:var(--sh2);
+}
+.stat-ico{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;margin-bottom:12px;flex-shrink:0;
+}
+.stat-ico-grey{background:var(--paper)}
+.stat-ico-gold{background:var(--yellow-bg)}
+.stat-ico-green{background:var(--green-bg)}
+.stat-ico-red{background:var(--red-bg)}
+.stat-num{font-size:32px;font-weight:700;color:var(--navy);line-height:1}
+.stat-lbl{font-size:12.5px;color:var(--text2);margin-top:5px}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{
+  padding:10px 18px;text-align:left;
+  font-size:11px;font-weight:600;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.8px;
+  border-bottom:1px solid var(--border);
+  background:var(--paper);white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid #f0ede6;transition:.12s;cursor:pointer}
+tbody tr:hover{background:#fafaf7}
+tbody tr:last-child{border-bottom:none}
+td{padding:14px 18px;font-size:13.5px;vertical-align:middle}
+.td-doc{font-weight:500;color:var(--navy)}
+.td-meta{font-size:11.5px;color:var(--text3);margin-top:2px}
+.td-err{font-size:11.5px;color:var(--red);margin-top:3px}
+.td-muted{color:var(--text3);font-size:13px}
+.td-amount{font-weight:600;white-space:nowrap}
+
+/* ── BADGES ── */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;
+  font-size:11.5px;font-weight:500;white-space:nowrap;
+}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid #f3bfbb}
+.badge-yellow{background:var(--yellow-bg);color:var(--yellow)}
+.badge-navy{background:rgba(12,27,51,.07);color:var(--navy2)}
+.badge-gold{background:rgba(212,170,58,.12);color:var(--gold3)}
+.badge-grey{background:var(--paper);color:var(--text3)}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12.5px;font-weight:500;color:var(--text)}
+.form-req{color:var(--red)}
+.form-input{
+  width:100%;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:var(--r2);
+  font-size:13.5px;color:var(--text);background:#fff;transition:.15s;
+}
+.form-input:focus{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(12,27,51,.07)}
+.form-input::placeholder{color:var(--text3)}
+select.form-input{cursor:pointer}
+
+/* ── UPLOAD ZONE ── */
+.upload-zone{
+  border:2px dashed var(--border);border-radius:var(--r2);
+  padding:32px 20px;text-align:center;cursor:pointer;
+  transition:.15s;position:relative;background:var(--paper);
+  min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:var(--yellow-bg)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:28px;margin-bottom:10px;color:var(--text3)}
+.upload-title{font-size:13.5px;font-weight:500;color:var(--text)}
+.upload-hint{font-size:12px;color:var(--text3);margin-top:3px}
+.file-pill{
+  display:none;align-items:center;gap:8px;
+  background:var(--yellow-bg);border:1px solid var(--border2);
+  padding:8px 12px;border-radius:var(--r2);
+  font-size:12.5px;color:var(--gold3);font-weight:500;margin-top:10px;
+}
+.file-pill.show{display:flex}
+.file-pill-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-pill-remove{cursor:pointer;color:var(--text3);font-size:16px;transition:.15s;flex-shrink:0}
+.file-pill-remove:hover{color:var(--red)}
+.pdf-preview{
+  display:none;margin-top:12px;border-radius:var(--r2);overflow:hidden;
+  border:1px solid var(--border);
+}
+.pdf-preview.show{display:block}
+.pdf-preview iframe{width:100%;height:260px;border:none;display:block}
+
+/* ── TWO-COL LAYOUT ── */
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── ASIDE PANEL ── */
+.aside-panel{
+  background:var(--navy);border-radius:var(--r);
+  padding:24px;color:#fff;position:sticky;top:24px;
+}
+.aside-ico{
+  width:40px;height:40px;background:rgba(255,255,255,.1);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:18px;margin-bottom:14px;
+}
+.aside-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.aside-sub{font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.5}
+.aside-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.aside-li{display:flex;gap:8px;font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.4}
+.aside-dot{color:var(--gold);flex-shrink:0;margin-top:1px}
+.aside-privacy{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;font-size:12px;color:var(--text3);background:#fff;
+}
+
+/* ── PROGRESS ── */
+.progress-wrap{display:none}
+.progress-wrap.show{display:block}
+.progress-bg{height:3px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:3px;width:0%;transition:width .4s ease}
+.progress-lbl{font-size:11.5px;color:var(--text3);margin-top:5px}
+
+/* ── RESULT ── */
+.result-card{display:none;border-radius:var(--r2);padding:12px 14px;font-size:13px;align-items:flex-start;gap:10px}
+.result-card.show{display:flex}
+.result-card.success{background:var(--green-bg);color:var(--green);border:1px solid #b8dfc4}
+.result-card.error{background:var(--red-bg);color:var(--red);border:1px solid #f3bfbb}
+.result-ico{font-size:15px;flex-shrink:0;margin-top:1px}
+.result-title{font-weight:600;margin-bottom:2px}
+.result-detail{font-size:12px;opacity:.85;line-height:1.4}
+
+/* ── ALERTS ── */
+.alert-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 20px;border-bottom:1px solid #f0ede6;
+}
+.alert-item:last-child{border-bottom:none}
+.alert-dot{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;margin-top:1px;
+}
+.alert-dot.err{background:var(--red-bg);color:var(--red)}
+.alert-dot.ok{background:var(--yellow-bg);color:var(--yellow)}
+.alert-title{font-size:13.5px;font-weight:500}
+.alert-desc{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* ── IMPORT HISTORY ── */
+.import-hist-item{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:12px 16px;border-bottom:1px solid #f0ede6;
+}
+.import-hist-item:last-child{border-bottom:none}
+.import-hist-name{font-size:13px;font-weight:500}
+.import-hist-err{font-size:11.5px;color:var(--red);margin-top:2px}
+
+/* ── QUEUE FILTERS ── */
+.filters-bar{
+  display:flex;gap:8px;flex-wrap:wrap;
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  background:var(--paper);
+}
+.filter-input{
+  flex:1;min-width:180px;padding:7px 12px;
+  border:1.5px solid var(--border);border-radius:20px;
+  font-size:12.5px;background:#fff;transition:.15s;
+}
+.filter-input:focus{border-color:var(--navy)}
+.filter-select{
+  padding:7px 10px;border:1.5px solid var(--border);border-radius:20px;
+  font-size:12.5px;background:#fff;cursor:pointer;transition:.15s;
+}
+.filter-select:focus{border-color:var(--navy)}
+
+/* ── QUEUE ITEM ── */
+.queue-item{
+  padding:16px 20px;border-bottom:1px solid #f0ede6;transition:.12s;
+}
+.queue-item:last-child{border-bottom:none}
+.queue-item:hover{background:#fafaf7}
+.queue-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.queue-info{flex:1;min-width:200px}
+.queue-name{font-size:13.5px;font-weight:500;color:var(--navy)}
+.queue-meta{font-size:11.5px;color:var(--text3);margin-top:2px}
+.queue-err{font-size:11.5px;color:var(--red);margin-top:3px}
+.queue-amount{font-size:13.5px;font-weight:600;white-space:nowrap}
+.queue-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ── ADMIN ── */
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.admin-stat{
+  background:#fff;border:1px solid var(--border);border-radius:var(--r);
+  padding:28px 24px;box-shadow:var(--sh2);
+}
+.admin-ico{font-size:24px;color:var(--text3);margin-bottom:12px}
+.admin-num{font-size:40px;font-weight:700;color:var(--navy);line-height:1;margin-bottom:6px}
+.admin-lbl{font-size:13px;color:var(--text2)}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.member-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid #f0ede6;flex-wrap:wrap;
+}
+.member-row:last-child{border-bottom:none}
+.member-avatar{
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;flex-shrink:0;
+}
+.member-name{font-size:13px;font-weight:600;color:var(--navy)}
+.member-email{font-size:11.5px;color:var(--text3)}
+.member-access{font-size:11.5px;font-weight:600;color:var(--gold3);white-space:nowrap}
+.member-select{
+  padding:5px 8px;border:1.5px solid var(--border);border-radius:20px;
+  font-size:12px;background:#fff;cursor:pointer;transition:.15s;
+}
+
+/* ── NOTIF ITEM ── */
+.notif-item{
+  display:flex;gap:10px;padding:10px 0;
+  border-bottom:1px solid #f0ede6;
+}
+.notif-item:last-child{border-bottom:none}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:5px;flex-shrink:0}
+.notif-title{font-size:13px;font-weight:500}
+.notif-desc{font-size:11.5px;color:var(--text3);margin-top:1px}
+
+/* ── IMPORT DETAIL ── */
+.import-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.import-stat{text-align:center;padding:14px;background:var(--paper);border-radius:var(--r2)}
+.import-stat-num{font-size:24px;font-weight:700;color:var(--navy)}
+.import-stat-lbl{font-size:11.5px;color:var(--text3);margin-top:3px}
+
+/* ── SCORE BAR ── */
+.score-wrap{display:flex;align-items:center;gap:8px}
+.score-bg{flex:1;height:4px;background:var(--border);border-radius:4px;overflow:hidden;min-width:40px}
+.score-fill{height:100%;border-radius:4px}
+.score-val{font-size:12px;font-weight:600;min-width:26px;text-align:right}
+
+/* ── SPINNER ── */
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;display:none}
+.spin.show{display:inline-block}
+.spin-dark{border-color:rgba(12,27,51,.2);border-top-color:var(--navy)}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{
+  background:var(--navy);color:#fff;
+  padding:11px 16px;border-radius:var(--r2);
+  font-size:13px;font-weight:500;
+  box-shadow:var(--sh3);
+  display:flex;align-items:center;gap:10px;
+  min-width:260px;animation:toastIn .2s ease;pointer-events:auto;
+}
+.toast.ok{background:#1a4a38}
+.toast.err{background:#5c2a25}
+@keyframes toastIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+
+/* ── EMPTY ── */
+.empty{padding:48px 20px;text-align:center;color:var(--text3)}
+.empty-ico{font-size:38px;margin-bottom:12px}
+.empty-t{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.empty-d{font-size:13px;max-width:300px;margin:0 auto;line-height:1.5}
+
+/* ── MOBILE ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;display:none}
+.overlay.show{display:block}
+.mobile-btn{
+  position:fixed;top:14px;left:14px;z-index:300;
+  width:38px;height:38px;background:var(--navy);color:#fff;
+  border-radius:8px;border:none;font-size:18px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+}
+@media(max-width:920px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .admin-grid{grid-template-columns:1fr}
+  .admin-stats{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .import-summary{grid-template-columns:repeat(2,1fr)}
+  .section{padding:20px 16px}
+  .mobile-btn{display:flex}
+  .hero{padding:28px 24px}
+  .hero-title{font-size:32px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── OVERLAY & MOBILE BTN ── -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<button class="mobile-btn" id="mobileBtn" onclick="openSidebar()">☰</button>
+
+<!-- ═══════════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════════════ -->
+<!-- ═══════════ AUTH SCREEN ═══════════ -->
+<div id="auth-screen" class="auth-screen">
+
+  <!-- Header -->
+  <div class="auth-top">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">⬡</div>
+      Kajiflow
+    </div>
+    <div class="auth-brand">Gestion des bordereaux et matching</div>
+    <div class="auth-title-main">Choisissez votre <em>espace</em></div>
+  </div>
+
+  <!-- 3 Portals -->
+  <div class="auth-portals">
+
+    <!-- DÉPOSANT -->
+    <div class="auth-portal deposant" onclick="openModal('deposant')">
+      <span class="portal-tag d">Déposant</span>
+      <div class="portal-ico d">📤</div>
+      <div class="portal-title">Espace Déposant</div>
+      <div class="portal-desc">Envoyez vos bordereaux de dépôt et suivez l'état de vos soumissions en temps réel.</div>
+      <button class="portal-btn d">Connexion Déposant</button>
+    </div>
+
+    <!-- COMPTABLE -->
+    <div class="auth-portal comptable" onclick="openModal('comptable')">
+      <span class="portal-tag c">Comptable</span>
+      <div class="portal-ico c">📊</div>
+      <div class="portal-title">Espace Comptable</div>
+      <div class="portal-desc">Accédez à la file de traitement, validez les rapprochements et importez les relevés bancaires.</div>
+      <button class="portal-btn c">Connexion Comptable</button>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="auth-portal admin" onclick="openModal('admin')">
+      <span class="portal-tag a">Admin</span>
+      <div class="portal-ico a">🛡</div>
+      <div class="portal-title">Administration</div>
+      <div class="portal-desc">Gérez les organisations, les membres, les accès et la configuration du système.</div>
+      <button class="portal-btn a">Connexion Admin</button>
+    </div>
+
+  </div>
+
+  <div class="auth-footer">Accès sécurisé · Kajiflow &copy; 2026 · Premium Foods RDC</div>
+</div>
+
+<!-- ═══════════ LOGIN MODAL ═══════════ -->
+<div class="auth-modal-bg" id="auth-modal">
+  <div class="auth-modal">
+    <span class="auth-modal-close" onclick="closeModal()">✕</span>
+    <div class="auth-modal-ico" id="modal-ico"></div>
+    <div class="auth-modal-title" id="modal-title"></div>
+    <div class="auth-modal-sub" id="modal-sub"></div>
+    <div class="auth-error" id="modal-error">Identifiants incorrects. Veuillez réessayer.</div>
+    <div class="auth-field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="modal-email" placeholder="votre@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="auth-field">
+      <label>Mot de passe</label>
+      <input type="password" id="modal-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button id="modal-btn" onclick="doLogin()" style="width:100%;padding:11px;border-radius:30px;font-size:13.5px;font-weight:600;border:none;cursor:pointer;transition:.15s;margin-top:4px">
+      Se connecter
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     APP
+═══════════════════════════════════════════════════ -->
+<div class="app" id="app" style="display:none">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo"><div class="sb-logo-mark">⬡</div>Kajiflow</div>
+    <div class="sb-tagline">Gestion des bordereaux</div>
+  </div>
+  <nav class="sb-nav">
+    <a class="sb-item active" data-page="dashboard" onclick="goTo('dashboard',this)">
+      <span class="sb-icon">⊞</span>Vue d'ensemble
+    </a>
+    <a class="sb-item" data-page="send" onclick="goTo('send',this)">
+      <span class="sb-icon">↑</span>Envoyer un bordereau
+      <span class="sb-notif" id="notif-send" style="display:none">!</span>
+    </a>
+    <a class="sb-item" data-page="history" onclick="goTo('history',this)">
+      <span class="sb-icon">☰</span>Mes envois
+    </a>
+    <div class="sb-divider"></div>
+    <a class="sb-item" id="nav-comptabilite" data-page="accountant" onclick="goTo('accountant',this)">
+      <span class="sb-icon">⊙</span>Espace comptable
+    </a>
+    <a class="sb-item" id="nav-admin" data-page="admin" onclick="goTo('admin',this)">
+      <span class="sb-icon">⚙</span>Administration
+    </a>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-avatar">N</div>
+      <div>
+        <div class="sb-uname" id="sb-uname">—</div>
+        <div class="sb-uemail" id="sb-uemail">—</div>
+        <span class="sb-role-pill" id="sb-role">—</span>
+      </div>
+    </div>
+    <div class="sb-logout" onclick="logout()">↩ Se déconnecter</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ══════════════ DASHBOARD ══════════════ -->
+<div class="page active" id="page-dashboard">
+<div class="section">
+  <div class="hero">
+    <div class="eyebrow hero-eyebrow">BONJOUR</div>
+    <div class="hero-title">Vos bordereaux, <em>clairement</em> suivis.</div>
+    <p class="hero-sub">Envoyez, suivez et retrouvez chaque dépôt dans un espace conçu pour rendre le rapprochement simple et sûr.</p>
+    <div class="hero-actions">
+      <button class="btn-gold" onclick="goTo('send',document.querySelector('[data-page=send]'))">Envoyer un bordereau ↗</button>
+      <button class="btn-ghost" onclick="goTo('history',document.querySelector('[data-page=history]'))">Voir mon historique</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-ico stat-ico-grey">↑</div><div class="stat-num" id="s-total">0</div><div class="stat-lbl">Envois suivis</div></div>
+    <div class="stat-card"><div class="stat-ico stat-ico-grey">◎</div><div class="stat-num" id="s-processing">0</div><div class="stat-lbl">En traitement</div></div>
+    <div class="stat-card"><div class="stat-ico stat-ico-gold">✓</div><div class="stat-num" id="s-matched">0</div><div class="stat-lbl">Rapprochés</div></div>
+    <div class="stat-card"><div class="stat-ico stat-ico-red">!</div><div class="stat-num" id="s-attention">0</div><div class="stat-lbl">À traiter</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:20px">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="h2">Derniers bordereaux</div><div class="subtitle" style="margin:0">Un aperçu de vos dépôts récents.</div></div>
+        <button class="btn-sm" onclick="goTo('history',document.querySelector('[data-page=history]'))">Tout voir</button>
+      </div>
+      <div id="dash-list">
+        <div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Aucun envoi</div><div class="empty-d">Ton suivi apparaîtra ici dès que ton bordereau sera reçu.</div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div class="stat-ico stat-ico-gold" style="margin:0;flex-shrink:0">🔔</div>
+        <div><div class="h3">Notifications</div><div class="subtitle" style="font-size:12px;margin:0">Chaque étape importante est signalée ici : réception, correction demandée, résultat de matching ou validation comptable.</div></div>
+      </div>
+      <div id="dash-notifs"><div style="font-size:12.5px;color:var(--text3)">Aucune notification.</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════ ENVOYER ══════════════ -->
+<div class="page" id="page-send">
+<div class="section">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+    <div>
+      <div class="eyebrow" id="send-eyebrow">NOUVEAU DÉPÔT</div>
+      <div class="h1" id="send-title">Envoyer un bordereau</div>
+      <div class="subtitle">Ajoutez votre bordereau : les informations sont extraites automatiquement, puis traitées par l'équipe comptable.</div>
+    </div>
+    <span class="aside-privacy">🔒 Vos fichiers restent privés</span>
+  </div>
+
+  <div class="two-col">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card card-pad">
+        <div class="h3" style="margin-bottom:4px">1. Ajouter le document</div>
+        <div class="subtitle" style="margin-bottom:14px">PDF, JPG, PNG ou WEBP · 5 Mo maximum.</div>
+        <div class="upload-zone" id="dz-send"
+          ondragover="dzOver(event,'dz-send')" ondragleave="dzOut('dz-send')"
+          ondrop="dzDrop(event,'f-send','dz-send')">
+          <input type="file" id="f-send" accept="image/*,.pdf,.webp" onchange="onFile('f-send')">
+          <div class="upload-icon">⬆</div>
+          <div class="upload-title">Choisir un fichier</div>
+          <div class="upload-hint">Glisse-le ici ou sélectionne-le depuis ton appareil.</div>
+        </div>
+        <div class="file-pill" id="fp-send">
+          <span>📎</span><span class="file-pill-name" id="fp-send-name"></span>
+          <span class="file-pill-remove" onclick="removeFile('f-send','fp-send','pp-send')">✕</span>
+        </div>
+        <div class="pdf-preview" id="pp-send">
+          <div style="font-size:11px;color:var(--text3);padding:8px 12px;background:var(--paper);border-bottom:1px solid var(--border)">Aperçu avant envoi</div>
+          <iframe id="pp-send-frame" title="Prévisualisation du bordereau PDF"></iframe>
+        </div>
+      </div>
+
+
+      <div class="progress-wrap" id="pg-send"><div class="progress-bg"><div class="progress-fill" id="pg-send-bar"></div></div><div class="progress-lbl" id="pg-send-lbl"></div></div>
+      <div class="result-card" id="res-send"><div class="result-ico" id="res-send-ico"></div><div><div class="result-title" id="res-send-t"></div><div class="result-detail" id="res-send-d"></div></div></div>
+    </div>
+
+    <div>
+      <div class="aside-panel">
+        <div class="aside-ico">↑</div>
+        <div class="aside-title">Avant d'envoyer</div>
+        <div class="aside-sub">Le montant, la banque, la date et la référence sont lus automatiquement sur le document : choisissez simplement une photo ou un PDF bien lisible.</div>
+        <div class="aside-list">
+          <div class="aside-li"><span class="aside-dot">•</span>Analyse et rapprochement sécurisés</div>
+          <div class="aside-li"><span class="aside-dot">•</span>Historique disponible dans ton espace</div>
+          <div class="aside-li"><span class="aside-dot">•</span>Notification à chaque changement</div>
+        </div>
+      </div>
+      <button class="btn-gold" id="btn-send" onclick="sendBordereau()"
+        style="width:100%;justify-content:center;padding:13px;margin-top:14px;border-radius:var(--r2);opacity:.5"
+        disabled>
+        <div class="spin" id="spin-send"></div>
+        <span id="btn-send-txt">Envoyer pour traitement</span>
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════ HISTORIQUE ══════════════ -->
+<div class="page" id="page-history">
+<div class="section">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+    <div>
+      <div class="eyebrow">MES ENVOIS</div>
+      <div class="h1">Historique des bordereaux</div>
+      <div class="subtitle">Retrouve les documents, le résultat du matching et les actions à effectuer.</div>
+    </div>
+    <button class="btn-navy" onclick="goTo('send',document.querySelector('[data-page=send]'))">Envoyer un bordereau ↗</button>
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>DOCUMENT</th><th>MONTANT</th><th>BANQUE</th><th>STATUT</th><th>SCORE</th></tr></thead>
+        <tbody id="hist-tbody">
+          <tr><td colspan="5"><div class="empty"><div class="empty-ico">📂</div><div class="empty-t">Aucun envoi</div><div class="empty-d">Vos bordereaux apparaîtront ici après envoi.</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════ ESPACE COMPTABLE ══════════════ -->
+<div class="page" id="page-accountant">
+<div class="section">
+  <!-- access guard -->
+  <div id="guard-comptable" style="display:none">
+    <div class="empty" style="padding:80px 20px">
+      <div class="empty-ico">🛡</div>
+      <div class="empty-t">Espace comptable protégé</div>
+      <div class="empty-d">Ton profil doit être configuré avec le rôle comptable pour accéder à cette page.</div>
+    </div>
+  </div>
+  <div id="content-comptable">
+    <div class="eyebrow">ESPACE COMPTABLE</div>
+    <div class="h1" style="margin-bottom:4px">Pilotage des rapprochements</div>
+    <div class="subtitle" style="margin-bottom:24px">Recherche par déposant, référence ou document, puis affine la file.</div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-ico stat-ico-grey">◎</div><div class="stat-num" id="c-pending">4</div><div class="stat-lbl">À traiter</div></div>
+      <div class="stat-card"><div class="stat-ico stat-ico-gold">⚠</div><div class="stat-num" id="c-review">2</div><div class="stat-lbl">À vérifier</div></div>
+      <div class="stat-card"><div class="stat-ico stat-ico-green">✓</div><div class="stat-num" id="c-matched">0</div><div class="stat-lbl">Matchés</div></div>
+      <div class="stat-card"><div class="stat-ico stat-ico-red">!</div><div class="stat-num" id="c-errors">4</div><div class="stat-lbl">Erreurs</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;margin-top:20px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Import Relevé -->
+        <div class="card card-pad">
+          <div class="eyebrow" style="margin-bottom:6px">MATCHING BANCAIRE</div>
+          <div class="h2" style="font-size:19px;margin-bottom:4px">Importer un relevé Excel</div>
+          <div class="subtitle" style="margin-bottom:16px">Le fichier reste privé dans l'organisation, puis est transmis au moteur de matching.</div>
+
+          <label class="form-label" style="display:block;margin-bottom:6px">Organisation cible</label>
+          <select class="form-input" id="org-sel" style="margin-bottom:14px">
+            <option value="">Choisir une organisation...</option>
+            <option value="KJ-TEST">Kajiflow TEST</option>
+          </select>
+
+          <div class="upload-zone" id="dz-releve"
+            ondragover="dzOver(event,'dz-releve')" ondragleave="dzOut('dz-releve')"
+            ondrop="dzDrop(event,'f-releve','dz-releve')">
+            <input type="file" id="f-releve" accept=".xlsx,.xls,.csv" onchange="onFileReleve()">
+            <div class="upload-icon">☰</div>
+            <div class="upload-title">Choisir un relevé</div>
+            <div class="upload-hint">XLSX, XLS ou CSV · 15 Mo maximum.</div>
+          </div>
+          <div class="file-pill" id="fp-releve"><span>📎</span><span class="file-pill-name" id="fp-releve-name"></span><span class="file-pill-remove" onclick="removeFile('f-releve','fp-releve',null)">✕</span></div>
+
+          <div class="progress-wrap" id="pg-releve" style="margin-top:12px"><div class="progress-bg"><div class="progress-fill" id="pg-releve-bar"></div></div><div class="progress-lbl" id="pg-releve-lbl"></div></div>
+          <div class="result-card" id="res-releve" style="margin-top:10px"><div class="result-ico" id="res-releve-ico"></div><div><div class="result-title" id="res-releve-t"></div><div class="result-detail" id="res-releve-d"></div></div></div>
+
+          <button class="btn-navy" id="btn-releve" onclick="sendReleve()"
+            style="width:100%;justify-content:center;padding:12px;margin-top:14px;border-radius:var(--r2);opacity:.5"
+            disabled>
+            <div class="spin" id="spin-releve"></div>
+            <span id="btn-releve-txt">⬆ Lancer le matching</span>
+          </button>
+        </div>
+
+        <!-- File de traitement -->
+        <div class="card">
+          <div class="card-header">
+            <div><div class="h2">File de traitement</div></div>
+            <button class="btn-sm" onclick="renderQueue()">↻</button>
+          </div>
+          <div class="filters-bar">
+            <input class="filter-input" id="q-search" placeholder="Rechercher un déposant, reçu…" oninput="renderQueue()">
+            <select class="filter-select" id="q-status" onchange="renderQueue()">
+              <option value="">Tous les statuts</option>
+              <option value="error">Erreur</option>
+              <option value="matched">Rapproché</option>
+              <option value="pending">En attente</option>
+              <option value="match_suspect">À vérifier</option>
+            </select>
+            <select class="filter-select" id="q-bank" onchange="renderQueue()">
+              <option value="">Toutes les banques</option>
+              <option>Rawbank</option><option>Equity BCDC</option><option>TMB</option>
+            </select>
+            <input class="filter-select" id="q-d1" type="date" oninput="renderQueue()">
+            <input class="filter-select" id="q-d2" type="date" oninput="renderQueue()">
+          </div>
+          <div id="queue-list"></div>
+        </div>
+
+      </div>
+
+      <!-- Aside: alerts + import history -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Alertes -->
+        <div class="card">
+          <div class="card-header" style="gap:10px">
+            <div class="stat-ico stat-ico-gold" style="margin:0;width:32px;height:32px;flex-shrink:0">🔔</div>
+            <div><div class="h3">Alertes opérationnelles</div><div class="subtitle" style="font-size:11.5px;margin:0">Résultats d'import, erreurs et demandes.</div></div>
+          </div>
+          <div id="alerts-list">
+            <div class="alert-item"><div class="alert-dot err">⊘</div><div><div class="alert-title">Traitement interrompu</div><div class="alert-desc">Le comptable a été informé de l'erreur.</div></div></div>
+            <div class="alert-item"><div class="alert-dot ok">✓</div><div><div class="alert-title">Bordereau reçu</div><div class="alert-desc">Votre document est en cours de traitement.</div></div></div>
+            <div class="alert-item"><div class="alert-dot ok">✓</div><div><div class="alert-title">Bordereau reçu</div><div class="alert-desc">Votre document est en cours de traitement.</div></div></div>
+            <div class="alert-item"><div class="alert-dot err">⊘</div><div><div class="alert-title">Traitement interrompu</div><div class="alert-desc">Le comptable a été informé de l'erreur.</div></div></div>
+          </div>
+        </div>
+
+        <!-- Import history -->
+        <div class="card">
+          <div class="card-header"><div style="display:flex;align-items:center;gap:6px"><span>🛡</span><div class="h3">Derniers imports</div></div></div>
+          <div id="import-hist">
+            <div style="padding:14px 4px;font-size:12.5px;color:var(--text3)">Aucun import pour le moment.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════ ADMINISTRATION ══════════════ -->
+<div class="page" id="page-admin">
+<div class="section">
+  <div id="guard-admin" style="display:none">
+    <div class="empty" style="padding:80px 20px"><div class="empty-ico">🔒</div><div class="empty-t">Accès restreint</div><div class="empty-d">Cette page est réservée aux administrateurs.</div></div>
+  </div>
+  <div id="content-admin">
+    <div class="eyebrow">ADMINISTRATION</div>
+    <div class="h1" style="margin-bottom:4px">Organisations et accès</div>
+    <div class="subtitle" style="margin-bottom:24px">Structure les équipes, attribue les rôles et conserve un contrôle clair sur les accès.</div>
+
+    <div class="admin-stats">
+      <div class="admin-stat"><div class="admin-ico">👥</div><div class="admin-num" id="a-users">1</div><div class="admin-lbl">Utilisateurs suivis</div></div>
+      <div class="admin-stat"><div class="admin-ico">📊</div><div class="admin-num" id="a-comptables">0</div><div class="admin-lbl">Comptables</div></div>
+      <div class="admin-stat"><div class="admin-ico">🛡</div><div class="admin-num" id="a-admins">1</div><div class="admin-lbl">Administrateurs</div></div>
+    </div>
+
+    <div class="admin-grid">
+      <div class="card card-pad">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <div class="stat-ico stat-ico-gold" style="margin:0;flex-shrink:0">🏢</div>
+          <div><div class="h2">Nouvelle organisation</div><div class="subtitle" style="font-size:12px;margin:0">Crée un espace de rattachement pour les équipes.</div></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Nom</label>
+          <input class="form-input" id="org-name" placeholder="Ex. Direction financière">
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Code interne</label>
+          <input class="form-input" id="org-code" placeholder="Ex. FIN-KIN">
+        </div>
+        <button class="btn-navy" style="width:100%;justify-content:center;padding:11px" onclick="createOrg()">Créer l'organisation</button>
+        <div style="margin-top:20px">
+          <div class="h3" style="margin-bottom:10px">Organisations actives</div>
+          <div id="org-list">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--paper);border-radius:var(--r2)">
+              <div><div style="font-size:13px;font-weight:600">Kajiflow TEST</div><div style="font-size:11.5px;color:var(--text3)">KJ-TEST</div></div>
+              <span style="font-size:12px;color:var(--text3);background:#fff;padding:4px 10px;border-radius:20px;border:1px solid var(--border)">1 membre</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-pad">
+        <div class="h2" style="margin-bottom:4px">Membres et rôles</div>
+        <div class="subtitle" style="font-size:12px;margin-bottom:16px">Les changements s'appliquent immédiatement et sont contrôlés côté serveur.</div>
+        <div id="members-list">
+          <div class="member-row">
+            <div class="member-avatar" style="background:rgba(212,170,58,.1);color:var(--gold3)">N</div>
+            <div style="flex:1"><div class="member-name">Nexus Agency's</div><div class="member-email">agencysnexus@gmail.com</div></div>
+            <select class="member-select" onchange="toast('Accès mis à jour','ok')"><option>Admin</option><option>Comptable</option><option>Déposant</option></select>
+            <select class="member-select" onchange="toast('Accès mis à jour','ok')"><option>Kajiflow</option><option>Sans org.</option></select>
+            <span class="member-access">ACCÈS ACTIF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</main>
+</div><!-- end app -->
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ─── PRODUCTION URLS ─────────────────────────────────────
+const URL_BORDEREAU = 'https://n8n.srv1332055.hstgr.cloud/webhook/bordereau-ingestion';
+const URL_RELEVE    = 'https://n8n.srv1332055.hstgr.cloud/webhook/matching-releve-bancaire';
+
+// ─── AUTH ─────────────────────────────────────────────────
+let USER = null;
+let CURRENT_ROLE = null;
+
+// Comptes autorisés par rôle
+const ACCOUNTS = {
+  deposant: [
+    // Pas de compte prédéfini — email libre + mot de passe "kajiflow"
+  ],
+  comptable: [
+    // Pas de compte prédéfini — email libre + mot de passe "kajiflow"
+  ],
+  admin: [
+    { email: 'agencysnexus@gmail.com', password: 'kajiflow', name: 'Kajiflow' }
+  ]
+};
+
+const PORTAL_CONFIG = {
+  deposant: {
+    ico: '📤', icoClass: 'd',
+    title: 'Connexion Déposant',
+    sub: 'Entrez vos identifiants pour accéder à votre espace de dépôt.',
+    btnClass: 'portal-btn d', btnBg: 'var(--gold)', btnColor: 'var(--navy)',
+    defaultPwd: 'kajiflow'
+  },
+  comptable: {
+    ico: '📊', icoClass: 'c',
+    title: 'Connexion Comptable',
+    sub: 'Entrez vos identifiants pour accéder à l\'espace comptable.',
+    btnClass: 'portal-btn c', btnBg: 'var(--green)', btnColor: '#fff',
+    defaultPwd: 'kajiflow'
+  },
+  admin: {
+    ico: '🛡', icoClass: 'a',
+    title: 'Administration',
+    sub: 'Accès restreint aux administrateurs du système.',
+    btnClass: 'portal-btn a', btnBg: 'var(--navy)', btnColor: '#fff',
+    defaultPwd: null
+  }
+};
+
+function openModal(role){
+  CURRENT_ROLE = role;
+  const cfg = PORTAL_CONFIG[role];
+  const icoEl = document.getElementById('modal-ico');
+  icoEl.textContent = cfg.ico;
+  icoEl.className = 'auth-modal-ico portal-ico '+cfg.icoClass;
+  document.getElementById('modal-title').textContent = cfg.title;
+  document.getElementById('modal-sub').textContent = cfg.sub;
+  document.getElementById('modal-email').value = '';
+  document.getElementById('modal-password').value = '';
+  document.getElementById('modal-error').classList.remove('show');
+  const btn = document.getElementById('modal-btn');
+  btn.style.background = cfg.btnBg;
+  btn.style.color = cfg.btnColor;
+  document.getElementById('auth-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('modal-email').focus(), 150);
+}
+
+function closeModal(){
+  document.getElementById('auth-modal').classList.remove('show');
+  CURRENT_ROLE = null;
+}
+
+function doLogin(){
+  const role = CURRENT_ROLE;
+  if(!role) return;
+  const email = document.getElementById('modal-email').value.trim().toLowerCase();
+  const pwd = document.getElementById('modal-password').value;
+  const cfg = PORTAL_CONFIG[role];
+  const errEl = document.getElementById('modal-error');
+
+  if(!email){ errEl.textContent='Veuillez entrer votre adresse e-mail.'; errEl.classList.add('show'); return; }
+  if(!pwd){ errEl.textContent='Veuillez entrer votre mot de passe.'; errEl.classList.add('show'); return; }
+
+  let name = '';
+  let authorized = false;
+
+  if(role === 'admin'){
+    const acc = ACCOUNTS.admin.find(a => a.email === email && a.password === pwd);
+    if(acc){ authorized = true; name = acc.name; }
+  } else {
+    // Déposant / Comptable : mot de passe générique "kajiflow"
+    if(pwd === cfg.defaultPwd){
+      authorized = true;
+      name = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
+    }
+  }
+
+  if(!authorized){
+    errEl.textContent = 'Identifiants incorrects. Veuillez réessayer.';
+    errEl.classList.add('show');
+    document.getElementById('modal-password').value='';
+    document.getElementById('modal-password').focus();
+    return;
+  }
+
+  errEl.classList.remove('show');
+  closeModal();
+  loginSuccess(role, name, email);
+}
+
+function loginSuccess(role, name, email){
+  USER = {role, name, email};
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('sb-avatar').textContent = name[0].toUpperCase();
+  document.getElementById('sb-uname').textContent = name;
+  document.getElementById('sb-uemail').textContent = email;
+  document.getElementById('sb-role').textContent = role.charAt(0).toUpperCase()+role.slice(1);
+  applyRoleGuards();
+  renderQueue();
+  toast('Bienvenue, '+name+' !','ok');
+}
+
+function logout(){
+  USER = null;
+  CURRENT_ROLE = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  BORDEREAUX = [];
+  updateStats();
+}
+function applyRoleGuards(){
+  const isComptable = USER.role==='comptable'||USER.role==='admin';
+  const isAdmin = USER.role==='admin';
+  document.getElementById('nav-comptabilite').style.display = isComptable?'':'none';
+  document.getElementById('nav-admin').style.display = isAdmin?'':'none';
+  document.getElementById('guard-comptable').style.display = isComptable?'none':'block';
+  document.getElementById('content-comptable').style.display = isComptable?'block':'none';
+  document.getElementById('guard-admin').style.display = isAdmin?'none':'block';
+  document.getElementById('content-admin').style.display = isAdmin?'block':'none';
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────
+function goTo(name, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  closeSidebar();
+}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+
+// Fermer le modal auth en cliquant en dehors ou Escape
+document.getElementById('auth-modal').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeModal();
+});
+
+// ─── FILE HANDLING ────────────────────────────────────────
+function onFile(id){
+  const f=document.getElementById(id).files[0];
+  if(!f) return;
+  if(f.size>5*1024*1024){toast('Fichier trop volumineux (max 5 Mo)','err');return}
+  const fp=document.getElementById('fp-send');
+  document.getElementById('fp-send-name').textContent=f.name+' ('+fmt(f.size)+')';
+  fp.classList.add('show');
+  // PDF preview
+  const pp=document.getElementById('pp-send');
+  if(f.type==='application/pdf'){
+    const url=URL.createObjectURL(f);
+    document.getElementById('pp-send-frame').src=url;
+    pp.classList.add('show');
+  } else {
+    pp.classList.remove('show');
+  }
+  const btn=document.getElementById('btn-send');
+  btn.disabled=false; btn.style.opacity='1';
+  document.getElementById('btn-send-txt').textContent='Envoyer pour traitement';
+  hideRes('res-send');
+}
+function onFileReleve(){
+  const f=document.getElementById('f-releve').files[0];
+  if(!f) return;
+  document.getElementById('fp-releve-name').textContent=f.name+' ('+fmt(f.size)+')';
+  document.getElementById('fp-releve').classList.add('show');
+  const btn=document.getElementById('btn-releve');
+  btn.disabled=false; btn.style.opacity='1';
+  document.getElementById('btn-releve-txt').textContent='⬆ Lancer le matching';
+  hideRes('res-releve');
+}
+function removeFile(inputId, pillId, previewId){
+  document.getElementById(inputId).value='';
+  document.getElementById(pillId).classList.remove('show');
+  if(previewId) document.getElementById(previewId).classList.remove('show');
+  if(inputId==='f-send'){const b=document.getElementById('btn-send');b.disabled=true;b.style.opacity='.5'}
+  if(inputId==='f-releve'){const b=document.getElementById('btn-releve');b.disabled=true;b.style.opacity='.5'}
+}
+function dzOver(e,id){e.preventDefault();document.getElementById(id).classList.add('drag')}
+function dzOut(id){document.getElementById(id).classList.remove('drag')}
+function dzDrop(e,inputId,zoneId){
+  e.preventDefault(); dzOut(zoneId);
+  const dt=e.dataTransfer;
+  if(!dt.files.length) return;
+  Object.defineProperty(document.getElementById(inputId),'files',{value:dt.files,configurable:true});
+  if(inputId==='f-send') onFile(inputId);
+  else onFileReleve();
+}
+
+// ─── DATA STORE ───────────────────────────────────────────
+let BORDEREAUX=[];
+let NOTIFS=[];
+
+// ─── N8N POST (timeout + messages d'erreur clairs) ────────
+async function postToN8n(url, fd, timeoutMs){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), timeoutMs);
+  try{
+    return await fetch(url,{method:'POST',body:fd,signal:ctrl.signal});
+  } finally { clearTimeout(timer); }
+}
+function friendlyError(e){
+  if(e && e.name==='AbortError') return 'Le serveur met trop de temps à répondre. Réessayez dans un instant.';
+  if(e instanceof TypeError) return 'Impossible de joindre le serveur de traitement (connexion internet ou serveur n8n indisponible).';
+  return (e && e.message) ? e.message : 'Erreur inattendue.';
+}
+function parseN8n(txt){
+  try{ const d=JSON.parse(txt); return (d && typeof d==='object') ? d : {}; }catch{ return {}; }
+}
+
+// ─── SEND BORDEREAU ───────────────────────────────────────
+async function sendBordereau(){
+  const inp=document.getElementById('f-send');
+  if(!inp.files.length){toast('Choisis un fichier d\'abord','err');return}
+  const f=inp.files[0];
+
+  busy('btn-send','spin-send','btn-send-txt','Envoi en cours…',true);
+  showProg('pg-send','pg-send-bar','pg-send-lbl','Connexion à n8n…');
+  hideRes('res-send');
+
+  anim('pg-send-bar','pg-send-lbl',[
+    {p:20,l:'Envoi du fichier…'},
+    {p:50,l:'Analyse Gemini Vision…'},
+    {p:75,l:'Extraction des données…'},
+    {p:90,l:'Insertion Supabase…'},
+  ]);
+
+  try{
+    const fd=new FormData();
+    fd.append('file',f);
+
+    const r=await postToN8n(URL_BORDEREAU,fd,180000);
+    setProg('pg-send-bar','pg-send-lbl',100,'Terminé !');
+    const txt=await r.text();
+    if(!r.ok) throw new Error('HTTP '+r.status+' — '+txt.substring(0,120));
+    const data=parseN8n(txt);
+    if(r.ok && data.status!=='error' && data.success!==false){
+      showRes('res-send','success','✅','Bordereau reçu','Le traitement a été lancé en toute sécurité.');
+      toast('Bordereau reçu','ok');
+      const bd={id:Date.now(),name:f.name,montant:null,devise:null,banque:null,date:null,ref:null,status:'processing',score:null,createdAt:new Date().toLocaleDateString('fr-FR')};
+      BORDEREAUX.unshift(bd);
+      addNotif('received','Bordereau reçu','Votre document est en cours de traitement.');
+      updateStats();
+      renderHistory();
+      renderDashList();
+      // reset form
+      setTimeout(()=>{removeFile('f-send','fp-send','pp-send')},1500);
+    } else {
+      throw new Error(data.message||'Traitement échoué');
+    }
+  }catch(e){
+    const userMsg=friendlyError(e);
+    setProg('pg-send-bar','pg-send-lbl',100,'Erreur');
+    showRes('res-send','error','❌','Envoi interrompu',userMsg.substring(0,200));
+    toast('Envoi interrompu','err');
+    addNotif('error','Traitement interrompu',userMsg.substring(0,80));
+    // Still add to list with error
+    const bd={id:Date.now(),name:f.name,montant:null,devise:null,banque:null,date:null,ref:null,status:'error',errMsg:userMsg,score:null,createdAt:new Date().toLocaleDateString('fr-FR')};
+    BORDEREAUX.unshift(bd);
+    updateStats(); renderHistory(); renderDashList();
+  }finally{
+    busy('btn-send','spin-send','btn-send-txt','Envoyer un autre bordereau',false);
+    document.getElementById('btn-send').style.opacity='1';
+    setTimeout(()=>hideProg('pg-send'),1500);
+  }
+}
+
+// ─── SEND RELEVÉ ──────────────────────────────────────────
+async function sendReleve(){
+  const inp=document.getElementById('f-releve');
+  if(!inp.files.length){toast('Choisis un relevé Excel.','err');return}
+  const f=inp.files[0];
+
+  busy('btn-releve','spin-releve','btn-releve-txt','Matching en cours…',true);
+  showProg('pg-releve','pg-releve-bar','pg-releve-lbl','Envoi du relevé…');
+  hideRes('res-releve');
+
+  anim('pg-releve-bar','pg-releve-lbl',[
+    {p:15,l:'Parsing Excel…'},
+    {p:35,l:'Lecture bordereaux Supabase…'},
+    {p:55,l:'Calcul des scores…'},
+    {p:75,l:'Insertion résultats…'},
+    {p:90,l:'Mise à jour statuts…'},
+  ]);
+
+  try{
+    const fd=new FormData();
+    fd.append('file',f);
+    const r=await postToN8n(URL_RELEVE,fd,300000);
+    setProg('pg-releve-bar','pg-releve-lbl',100,'Terminé !');
+    const txt=await r.text();
+    if(!r.ok) throw new Error('HTTP '+r.status+' — '+txt.substring(0,120));
+    const data=parseN8n(txt);
+    if(r.ok && data.status!=='error' && data.success!==false){
+      const detail=[
+        data.total_lignes?data.total_lignes+' lignes':'',
+        data.matches?data.matches+' matches':'',
+        data.message||'Le matching bancaire a démarré.'
+      ].filter(Boolean).join(' · ');
+      showRes('res-releve','success','✅','Relevé transmis',detail);
+      toast('Relevé transmis','ok');
+      addImportHist(f.name,'ok','');
+      if(data.matches!=null) document.getElementById('c-matched').textContent=data.matches;
+    } else {
+      throw new Error(data.message||'Matching échoué');
+    }
+  }catch(e){
+    const userMsg=friendlyError(e);
+    setProg('pg-releve-bar','pg-releve-lbl',100,'Erreur');
+    showRes('res-releve','error','❌','Import interrompu',userMsg.substring(0,200));
+    toast('Import interrompu','err');
+    addImportHist(f.name,'err',userMsg.substring(0,120));
+  }finally{
+    busy('btn-releve','spin-releve','btn-releve-txt','⬆ Lancer le matching',false);
+    document.getElementById('btn-releve').style.opacity='1';
+    setTimeout(()=>hideProg('pg-releve'),1500);
+  }
+}
+
+// ─── IMPORT HISTORY ───────────────────────────────────────
+let importHist=[];
+function addImportHist(name,status,err){
+  importHist.unshift({name,status,err});
+  renderImportHist();
+}
+function renderImportHist(){
+  const el=document.getElementById('import-hist');
+  if(!importHist.length) return;
+  el.innerHTML=importHist.slice(0,5).map(h=>`<div class="import-hist-item">
+    <div>
+      <div class="import-hist-name">${esc(h.name)}</div>
+      ${h.err?`<div class="import-hist-err">${esc(h.err)}</div>`:''}
+    </div>
+    ${h.status==='ok'?'<span class="badge badge-green">OK</span>':h.status==='err'?'<span class="badge badge-red">Erreur</span>':'<span class="badge badge-yellow">…</span>'}
+  </div>`).join('');
+}
+
+// ─── QUEUE ────────────────────────────────────────────────
+function renderQueue(){
+  const search=(document.getElementById('q-search')?.value||'').toLowerCase();
+  const status=document.getElementById('q-status')?.value||'';
+  const bank=document.getElementById('q-bank')?.value||'';
+  const d1=document.getElementById('q-d1')?.value||'';
+  const d2=document.getElementById('q-d2')?.value||'';
+
+  let items=BORDEREAUX.filter(b=>{
+    if(search && !b.name.toLowerCase().includes(search) && !(b.ref||'').toLowerCase().includes(search)) return false;
+    if(status && b.status!==status) return false;
+    if(bank && b.banque!==bank) return false;
+    return true;
+  });
+
+  const el=document.getElementById('queue-list');
+  if(!el) return;
+  if(!items.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">File vide</div><div class="empty-d">Aucun bordereau ne correspond aux filtres.</div></div>`;
+    return;
+  }
+  el.innerHTML=items.map(b=>`<div class="queue-item">
+    <div class="queue-row">
+      <div class="queue-info">
+        <div class="queue-name">${esc(b.name)}</div>
+        <div class="queue-meta">${esc(b.banque||'—')} · ${b.date||'—'} · ${esc(b.ref||'—')}</div>
+        ${b.status==='error'?`<div class="queue-err">${esc(b.errMsg||'Le traitement a échoué.')}</div>`:''}
+      </div>
+      <div class="queue-amount">${b.montant?Number(b.montant).toLocaleString('fr-FR')+' '+(b.devise||'CDF'):'—'}</div>
+      ${badgeHtml(b.status)}
+      <span style="color:var(--text3);margin:0 2px">${b.score!=null?b.score:'—'}</span>
+      <div class="queue-actions">
+        <button class="btn-detail">👁 Détail</button>
+        <button class="btn-validate" onclick="validateItem(${b.id})">Valider</button>
+        <button class="btn-fix" onclick="fixItem(${b.id})">Corriger</button>
+      </div>
+    </div>
+  </div>`).join('');
+}
+function validateItem(id){
+  const b=BORDEREAUX.find(x=>x.id===id);
+  if(!b) return;
+  b.status='completed';b.score=85;
+  updateStats();renderHistory();renderDashList();renderQueue();
+  toast('Décision enregistrée','ok');
+  addNotif('matching_result','Matching validé','La ligne a été marquée comme traitée et les compteurs ont été actualisés.');
+}
+function fixItem(id){
+  const b=BORDEREAUX.find(x=>x.id===id);
+  if(!b) return;
+  b.status='needs_correction';
+  updateStats();renderHistory();renderDashList();renderQueue();
+  toast('Correction demandée','ok');
+  addNotif('correction_requested','Correction demandée','Le déposant a été notifié.');
+}
+
+// ─── HISTORY ──────────────────────────────────────────────
+function renderHistory(){
+  const el=document.getElementById('hist-tbody');
+  if(!BORDEREAUX.length){
+    el.innerHTML='<tr><td colspan="5"><div class="empty"><div class="empty-ico">📂</div><div class="empty-t">Aucun envoi</div><div class="empty-d">Vos bordereaux apparaîtront ici après envoi.</div></div></td></tr>';
+    return;
+  }
+  el.innerHTML=BORDEREAUX.map(b=>`<tr>
+    <td><div class="td-doc">${esc(b.name)}</div><div class="td-meta">${b.date||'—'} · ${esc(b.ref||'—')}</div></td>
+    <td class="td-amount">${b.montant?Number(b.montant).toLocaleString('fr-FR')+' '+(b.devise||'CDF'):'—'}</td>
+    <td class="td-muted">${esc(b.banque||'—')}</td>
+    <td>${badgeHtml(b.status)}</td>
+    <td>${b.score!=null?scoreBar(b.score):'<span class="td-muted">—</span>'}</td>
+  </tr>`).join('');
+}
+function renderDashList(){
+  const el=document.getElementById('dash-list');
+  if(!BORDEREAUX.length){
+    el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Aucun envoi</div><div class="empty-d">Ton suivi apparaîtra ici dès que ton bordereau sera reçu.</div></div>';
+    return;
+  }
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>DOCUMENT</th><th>MONTANT</th><th>BANQUE</th><th>STATUT</th><th>SCORE</th></tr></thead>
+    <tbody>${BORDEREAUX.slice(0,4).map(b=>`<tr>
+      <td><div class="td-doc">${esc(b.name)}</div><div class="td-meta">${b.date||'—'}</div></td>
+      <td class="td-amount">${b.montant?Number(b.montant).toLocaleString('fr-FR')+' '+(b.devise||'CDF'):'—'}</td>
+      <td class="td-muted">${esc(b.banque||'—')}</td>
+      <td>${badgeHtml(b.status)}</td>
+      <td>${b.score!=null?scoreBar(b.score):'<span class="td-muted">—</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function badgeHtml(s){
+  const m={
+    'processing':'<span class="badge badge-navy">En traitement</span>',
+    'completed':'<span class="badge badge-green">✓ Rapproché</span>',
+    'error':'<span class="badge badge-red">Erreur de traitement</span>',
+    'needs_correction':'<span class="badge badge-yellow">Correction demandée</span>',
+    'pending':'<span class="badge badge-grey">En attente</span>',
+    'match_suspect':'<span class="badge badge-gold">À vérifier</span>',
+    'orphan':'<span class="badge badge-red">Orphelin</span>',
+  };
+  return m[s]||`<span class="badge badge-grey">${esc(s)}</span>`;
+}
+function scoreBar(score){
+  const pct=Math.min(100,Math.max(0,score));
+  const c=pct>80?'var(--green)':pct>50?'#d97706':'var(--red)';
+  return `<div class="score-wrap"><div class="score-bg"><div class="score-fill" style="width:${pct}%;background:${c}"></div></div><span class="score-val" style="color:${c}">${pct}</span></div>`;
+}
+
+// ─── STATS ────────────────────────────────────────────────
+function updateStats(){
+  const total=BORDEREAUX.length;
+  const proc=BORDEREAUX.filter(b=>b.status==='processing').length;
+  const matched=BORDEREAUX.filter(b=>b.status==='completed').length;
+  const att=BORDEREAUX.filter(b=>b.status==='error'||b.status==='needs_correction').length;
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-processing').textContent=proc;
+  document.getElementById('s-matched').textContent=matched;
+  document.getElementById('s-attention').textContent=att;
+  if(document.getElementById('c-pending')) document.getElementById('c-pending').textContent=proc;
+  if(document.getElementById('c-errors')) document.getElementById('c-errors').textContent=BORDEREAUX.filter(b=>b.status==='error').length;
+}
+
+// ─── NOTIFS ───────────────────────────────────────────────
+function addNotif(type,title,desc){
+  NOTIFS.unshift({type,title,desc,time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
+  renderNotifs();
+}
+function renderNotifs(){
+  const el=document.getElementById('dash-notifs');
+  if(!NOTIFS.length){el.innerHTML='<div style="font-size:12.5px;color:var(--text3)">Aucune notification.</div>';return}
+  el.innerHTML=NOTIFS.slice(0,3).map(n=>`<div class="notif-item">
+    <div class="notif-dot"></div>
+    <div><div class="notif-title">${esc(n.title)}</div><div class="notif-desc">${esc(n.desc)}</div></div>
+  </div>`).join('');
+}
+
+// ─── ADMIN ────────────────────────────────────────────────
+function createOrg(){
+  const name=document.getElementById('org-name').value.trim();
+  const code=document.getElementById('org-code').value.trim();
+  if(!name||!code){toast('Remplissez le nom et le code','err');return}
+  const el=document.getElementById('org-list');
+  el.innerHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--paper);border-radius:var(--r2);margin-top:8px">
+    <div><div style="font-size:13px;font-weight:600">${esc(name)}</div><div style="font-size:11.5px;color:var(--text3)">${esc(code)}</div></div>
+    <span style="font-size:12px;color:var(--text3);background:#fff;padding:4px 10px;border-radius:20px;border:1px solid var(--border)">0 membre</span>
+  </div>`;
+  document.getElementById('org-name').value='';
+  document.getElementById('org-code').value='';
+  toast('Organisation créée','ok');
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────
+let _timers={};
+function anim(barId,lblId,steps){
+  clearTimeout(_timers[barId]);
+  let i=0;
+  function next(){
+    if(i>=steps.length) return;
+    const {p,l}=steps[i++];
+    setProg(barId,lblId,p,l);
+    _timers[barId]=setTimeout(next,600+Math.random()*400);
+  }
+  setTimeout(next,200);
+}
+function setProg(b,l,p,txt){document.getElementById(b).style.width=p+'%';document.getElementById(l).textContent=txt}
+function showProg(w,b,l,txt){document.getElementById(w).classList.add('show');setProg(b,l,5,txt)}
+function hideProg(w){document.getElementById(w).classList.remove('show')}
+function showRes(id,type,ico,t,d){
+  const el=document.getElementById(id);el.className='result-card show '+type;
+  document.getElementById(id+'-ico').textContent=ico;
+  document.getElementById(id+'-t').textContent=t;
+  document.getElementById(id+'-d').textContent=d;
+}
+function hideRes(id){document.getElementById(id).className='result-card'}
+function busy(btn,sp,txt,label,on){
+  document.getElementById(btn).disabled=on;
+  document.getElementById(sp).classList.toggle('show',on);
+  document.getElementById(txt).textContent=label;
+  if(!on) document.getElementById(btn).style.opacity='1';
+}
+function fmt(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ─── TOAST ────────────────────────────────────────────────
+function toast(msg,type){
+  const w=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className='toast '+(type||'');
+  el.innerHTML=(type==='ok'?'✅':type==='err'?'❌':'ℹ️')+' '+esc(msg);
+  w.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='.3s ease';setTimeout(()=>el.remove(),300)},4500);
+}
+</script>
+</body>
+</html>
