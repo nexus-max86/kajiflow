@@ -1109,49 +1109,46 @@ select.form-input{cursor:pointer}
 
 <div class="toast-wrap" id="toasts"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script>
-// ─── PRODUCTION URLS ─────────────────────────────────────
-const URL_BORDEREAU = 'https://n8n.srv1332055.hstgr.cloud/webhook/bordereau-ingestion';
-const URL_RELEVE    = 'https://n8n.srv1332055.hstgr.cloud/webhook/matching-releve-bancaire';
+// ─── CONNEXION SÉCURISÉE (Supabase Auth) ─────────────────
+// La clé ci-dessous est la clé publique du projet : elle est faite pour être visible.
+// Les données restent protégées par la connexion, les rôles et la passerelle.
+const SUPABASE_URL = 'https://ncazbgjpyfczchlzbhfe.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jYXpiZ2pweWZjemNobHpiaGZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNjc5NTIsImV4cCI6MjA5NTY0Mzk1Mn0.z2Jol0GmTLYitCkZV3xDWBuGKsQCC2LyKJffKqMLSlQ';
+const GATEWAY = SUPABASE_URL + '/functions/v1/kajiflow-envoi';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true, autoRefreshToken: true } });
 
-// ─── AUTH ─────────────────────────────────────────────────
 let USER = null;
 let CURRENT_ROLE = null;
-
-// Comptes autorisés par rôle
-const ACCOUNTS = {
-  deposant: [
-    // Pas de compte prédéfini — email libre + mot de passe "kajiflow"
-  ],
-  comptable: [
-    // Pas de compte prédéfini — email libre + mot de passe "kajiflow"
-  ],
-  admin: [
-    { email: 'agencysnexus@gmail.com', password: 'kajiflow', name: 'Kajiflow' }
-  ]
-};
+// Rôles admis par portail de connexion
+const ROLE_ALLOWED = { deposant: ['deposant', 'comptable', 'admin'], comptable: ['comptable', 'admin'], admin: ['admin'] };
+const ROLE_LABEL = { deposant: 'Déposant', comptable: 'Comptable', admin: 'Administration' };
+const nameFrom = (email) => { const n = (email || '').split('@')[0]; return n.charAt(0).toUpperCase() + n.slice(1); };
+async function fetchProfil(){
+  const { data, error } = await sb.from('profils').select('email, nom, role, actif').maybeSingle();
+  if(error) throw new Error('Profil introuvable : contactez l\'administrateur.');
+  return data;
+}
 
 const PORTAL_CONFIG = {
   deposant: {
     ico: '📤', icoClass: 'd',
     title: 'Connexion Déposant',
     sub: 'Entrez vos identifiants pour accéder à votre espace de dépôt.',
-    btnClass: 'portal-btn d', btnBg: 'var(--gold)', btnColor: 'var(--navy)',
-    defaultPwd: 'kajiflow'
+    btnClass: 'portal-btn d', btnBg: 'var(--gold)', btnColor: 'var(--navy)'
   },
   comptable: {
     ico: '📊', icoClass: 'c',
     title: 'Connexion Comptable',
     sub: 'Entrez vos identifiants pour accéder à l\'espace comptable.',
-    btnClass: 'portal-btn c', btnBg: 'var(--green)', btnColor: '#fff',
-    defaultPwd: 'kajiflow'
+    btnClass: 'portal-btn c', btnBg: 'var(--green)', btnColor: '#fff'
   },
   admin: {
     ico: '🛡', icoClass: 'a',
     title: 'Administration',
     sub: 'Accès restreint aux administrateurs du système.',
-    btnClass: 'portal-btn a', btnBg: 'var(--navy)', btnColor: '#fff',
-    defaultPwd: null
+    btnClass: 'portal-btn a', btnBg: 'var(--navy)', btnColor: '#fff'
   }
 };
 
@@ -1178,42 +1175,35 @@ function closeModal(){
   CURRENT_ROLE = null;
 }
 
-function doLogin(){
-  const role = CURRENT_ROLE;
-  if(!role) return;
+async function doLogin(){
+  const portal = CURRENT_ROLE;
+  if(!portal) return;
   const email = document.getElementById('modal-email').value.trim().toLowerCase();
   const pwd = document.getElementById('modal-password').value;
-  const cfg = PORTAL_CONFIG[role];
   const errEl = document.getElementById('modal-error');
+  const btn = document.getElementById('modal-btn');
+  const showErr = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
 
-  if(!email){ errEl.textContent='Veuillez entrer votre adresse e-mail.'; errEl.classList.add('show'); return; }
-  if(!pwd){ errEl.textContent='Veuillez entrer votre mot de passe.'; errEl.classList.add('show'); return; }
+  if(!email){ showErr('Veuillez entrer votre adresse e-mail.'); return; }
+  if(!pwd){ showErr('Veuillez entrer votre mot de passe.'); return; }
 
-  let name = '';
-  let authorized = false;
-
-  if(role === 'admin'){
-    const acc = ACCOUNTS.admin.find(a => a.email === email && a.password === pwd);
-    if(acc){ authorized = true; name = acc.name; }
-  } else {
-    // Déposant / Comptable : mot de passe générique "kajiflow"
-    if(pwd === cfg.defaultPwd){
-      authorized = true;
-      name = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
-    }
-  }
-
-  if(!authorized){
-    errEl.textContent = 'Identifiants incorrects. Veuillez réessayer.';
-    errEl.classList.add('show');
-    document.getElementById('modal-password').value='';
+  btn.disabled = true; btn.style.opacity = '.6';
+  try{
+    const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+    if(error) throw new Error(/invalid/i.test(error.message) ? 'Identifiants incorrects. Veuillez réessayer.' : 'Connexion impossible : ' + error.message);
+    const p = await fetchProfil();
+    if(!p || !p.actif){ await sb.auth.signOut(); throw new Error('Ce compte est désactivé ou n\'a pas encore de rôle. Contactez l\'administrateur.'); }
+    if(!ROLE_ALLOWED[portal].includes(p.role)){ await sb.auth.signOut(); throw new Error('Ce compte n\'a pas accès à l\'espace ' + ROLE_LABEL[portal] + '.'); }
+    errEl.classList.remove('show');
+    closeModal();
+    loginSuccess(p.role, p.nom || nameFrom(p.email), p.email);
+  }catch(e){
+    showErr(e && e.message ? e.message : 'Connexion impossible. Réessayez.');
+    document.getElementById('modal-password').value = '';
     document.getElementById('modal-password').focus();
-    return;
+  }finally{
+    btn.disabled = false; btn.style.opacity = '1';
   }
-
-  errEl.classList.remove('show');
-  closeModal();
-  loginSuccess(role, name, email);
 }
 
 function loginSuccess(role, name, email){
@@ -1229,7 +1219,8 @@ function loginSuccess(role, name, email){
   toast('Bienvenue, '+name+' !','ok');
 }
 
-function logout(){
+async function logout(){
+  try{ await sb.auth.signOut(); }catch(e){}
   USER = null;
   CURRENT_ROLE = null;
   document.getElementById('app').style.display = 'none';
@@ -1321,17 +1312,20 @@ function dzDrop(e,inputId,zoneId){
 let BORDEREAUX=[];
 let NOTIFS=[];
 
-// ─── N8N POST (timeout + messages d'erreur clairs) ────────
-async function postToN8n(url, fd, timeoutMs){
+// ─── ENVOI SÉCURISÉ (passerelle : session + rôle + clé n8n) ─
+async function postToN8n(type, fd, timeoutMs){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session) throw new Error('Session expirée : reconnectez-vous.');
   const ctrl = new AbortController();
   const timer = setTimeout(()=>ctrl.abort(), timeoutMs);
   try{
-    return await fetch(url,{method:'POST',body:fd,signal:ctrl.signal});
+    return await fetch(GATEWAY + '?type=' + type, { method:'POST', body:fd, signal:ctrl.signal,
+      headers: { Authorization: 'Bearer ' + session.access_token, apikey: SUPABASE_ANON } });
   } finally { clearTimeout(timer); }
 }
 function friendlyError(e){
   if(e && e.name==='AbortError') return 'Le serveur met trop de temps à répondre. Réessayez dans un instant.';
-  if(e instanceof TypeError) return 'Impossible de joindre le serveur de traitement (connexion internet ou serveur n8n indisponible).';
+  if(e instanceof TypeError) return 'Impossible de joindre le serveur de traitement : vérifiez votre connexion internet.';
   return (e && e.message) ? e.message : 'Erreur inattendue.';
 }
 function parseN8n(txt){
@@ -1359,10 +1353,10 @@ async function sendBordereau(){
     const fd=new FormData();
     fd.append('file',f);
 
-    const r=await postToN8n(URL_BORDEREAU,fd,180000);
+    const r=await postToN8n('bordereau',fd,150000);
     setProg('pg-send-bar','pg-send-lbl',100,'Terminé !');
     const txt=await r.text();
-    if(!r.ok) throw new Error('HTTP '+r.status+' — '+txt.substring(0,120));
+    if(!r.ok){ const d=parseN8n(txt); throw new Error(d.message || ('Erreur '+r.status+' pendant le traitement.')); }
     const data=parseN8n(txt);
     if(r.ok && data.status!=='error' && data.success!==false){
       showRes('res-send','success','✅','Bordereau reçu','Le traitement a été lancé en toute sécurité.');
@@ -1416,10 +1410,10 @@ async function sendReleve(){
   try{
     const fd=new FormData();
     fd.append('file',f);
-    const r=await postToN8n(URL_RELEVE,fd,300000);
+    const r=await postToN8n('releve',fd,150000);
     setProg('pg-releve-bar','pg-releve-lbl',100,'Terminé !');
     const txt=await r.text();
-    if(!r.ok) throw new Error('HTTP '+r.status+' — '+txt.substring(0,120));
+    if(!r.ok){ const d=parseN8n(txt); throw new Error(d.message || ('Erreur '+r.status+' pendant le traitement.')); }
     const data=parseN8n(txt);
     if(r.ok && data.status!=='error' && data.success!==false){
       const detail=[
@@ -1655,6 +1649,17 @@ function toast(msg,type){
   w.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='.3s ease';setTimeout(()=>el.remove(),300)},4500);
 }
+
+// ─── REPRISE DE SESSION ──────────────────────────────────
+(async () => {
+  try{
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session) return;
+    const p = await fetchProfil();
+    if(p && p.actif) loginSuccess(p.role, p.nom || nameFrom(p.email), p.email);
+    else await sb.auth.signOut();
+  }catch(e){ /* reste sur l'écran de connexion */ }
+})();
 </script>
 </body>
 </html>
