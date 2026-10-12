@@ -1118,40 +1118,52 @@ const URL_RELEVE    = 'https://n8n.srv1332055.hstgr.cloud/webhook/matching-relev
 let USER = null;
 let CURRENT_ROLE = null;
 
-// Comptes autorisés par rôle
-const ACCOUNTS = {
-  deposant: [
-    // Pas de compte prédéfini — email libre + mot de passe "kajiflow"
-  ],
-  comptable: [
-    // Pas de compte prédéfini — email libre + mot de passe "kajiflow"
-  ],
-  admin: [
-    { email: 'agencysnexus@gmail.com', password: 'kajiflow', name: 'Kajiflow' }
-  ]
+// Mots de passe par espace : seule une empreinte PBKDF2-SHA256 est stockée ici,
+// le mot de passe lui-même n'apparaît nulle part dans le site.
+const PWD_HASH = {
+  "deposant": {
+    "salt": "c7afa203adabe98b275aae32a029780e",
+    "hash": "952cc99ab0ccf293b6cd489d96eb48e813158499aee6a45dc9f86a24b5aede60"
+  },
+  "comptable": {
+    "salt": "5f0b1bdf62fe23c282a14d25404d7ac6",
+    "hash": "b2602fdb1409538089951c4fa1f9988b8b7256121a27029d446367aeabacd36a"
+  },
+  "admin": {
+    "salt": "7d06be43714d5c5f062dbaadab7ae98b",
+    "hash": "ebef8c3e640ad1c61c3cb385c590482b4ef5d64b4f8a992448179d701a1961d1"
+  }
 };
+const PWD_ITERATIONS = 210000;
+const ADMIN_EMAIL = 'agencysnexus@gmail.com';
+
+async function checkPassword(role, pwd){
+  const ref = PWD_HASH[role]; if(!ref || !window.crypto || !crypto.subtle) return false;
+  const salt = new Uint8Array(ref.salt.match(/../g).map(h => parseInt(h, 16)));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pwd), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: PWD_ITERATIONS }, key, 256);
+  const hex = [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex === ref.hash;
+}
 
 const PORTAL_CONFIG = {
   deposant: {
     ico: '📤', icoClass: 'd',
     title: 'Connexion Déposant',
     sub: 'Entrez vos identifiants pour accéder à votre espace de dépôt.',
-    btnClass: 'portal-btn d', btnBg: 'var(--gold)', btnColor: 'var(--navy)',
-    defaultPwd: 'kajiflow'
+    btnClass: 'portal-btn d', btnBg: 'var(--gold)', btnColor: 'var(--navy)'
   },
   comptable: {
     ico: '📊', icoClass: 'c',
     title: 'Connexion Comptable',
     sub: 'Entrez vos identifiants pour accéder à l\'espace comptable.',
-    btnClass: 'portal-btn c', btnBg: 'var(--green)', btnColor: '#fff',
-    defaultPwd: 'kajiflow'
+    btnClass: 'portal-btn c', btnBg: 'var(--green)', btnColor: '#fff'
   },
   admin: {
     ico: '🛡', icoClass: 'a',
     title: 'Administration',
     sub: 'Accès restreint aux administrateurs du système.',
-    btnClass: 'portal-btn a', btnBg: 'var(--navy)', btnColor: '#fff',
-    defaultPwd: null
+    btnClass: 'portal-btn a', btnBg: 'var(--navy)', btnColor: '#fff'
   }
 };
 
@@ -1178,39 +1190,32 @@ function closeModal(){
   CURRENT_ROLE = null;
 }
 
-function doLogin(){
+async function doLogin(){
   const role = CURRENT_ROLE;
   if(!role) return;
   const email = document.getElementById('modal-email').value.trim().toLowerCase();
   const pwd = document.getElementById('modal-password').value;
-  const cfg = PORTAL_CONFIG[role];
   const errEl = document.getElementById('modal-error');
+  const btn = document.getElementById('modal-btn');
+  const showErr = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
 
-  if(!email){ errEl.textContent='Veuillez entrer votre adresse e-mail.'; errEl.classList.add('show'); return; }
-  if(!pwd){ errEl.textContent='Veuillez entrer votre mot de passe.'; errEl.classList.add('show'); return; }
+  if(!email){ showErr('Veuillez entrer votre adresse e-mail.'); return; }
+  if(!pwd){ showErr('Veuillez entrer votre mot de passe.'); return; }
 
-  let name = '';
+  btn.disabled = true; btn.style.opacity = '.6';
   let authorized = false;
-
-  if(role === 'admin'){
-    const acc = ACCOUNTS.admin.find(a => a.email === email && a.password === pwd);
-    if(acc){ authorized = true; name = acc.name; }
-  } else {
-    // Déposant / Comptable : mot de passe générique "kajiflow"
-    if(pwd === cfg.defaultPwd){
-      authorized = true;
-      name = email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
-    }
-  }
+  try{
+    authorized = await checkPassword(role, pwd) && (role !== 'admin' || email === ADMIN_EMAIL);
+  }catch(e){ authorized = false; }
+  btn.disabled = false; btn.style.opacity = '1';
 
   if(!authorized){
-    errEl.textContent = 'Identifiants incorrects. Veuillez réessayer.';
-    errEl.classList.add('show');
+    showErr('Identifiants incorrects. Veuillez réessayer.');
     document.getElementById('modal-password').value='';
     document.getElementById('modal-password').focus();
     return;
   }
-
+  const name = role === 'admin' ? 'Kajiflow' : email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
   errEl.classList.remove('show');
   closeModal();
   loginSuccess(role, name, email);
