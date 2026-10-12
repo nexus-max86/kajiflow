@@ -1088,13 +1088,13 @@ select.form-input{cursor:pointer}
 
       <div class="card card-pad">
         <div class="h2" style="margin-bottom:4px">Membres et rôles</div>
-        <div class="subtitle" style="font-size:12px;margin-bottom:16px">Les changements s'appliquent immédiatement et sont contrôlés côté serveur.</div>
+        <div class="subtitle" style="font-size:12px;margin-bottom:16px">Aperçu des accès — la gestion des comptes et des rôles arrive dans une prochaine version.</div>
         <div id="members-list">
           <div class="member-row">
             <div class="member-avatar" style="background:rgba(212,170,58,.1);color:var(--gold3)">N</div>
             <div style="flex:1"><div class="member-name">Nexus Agency's</div><div class="member-email">agencysnexus@gmail.com</div></div>
-            <select class="member-select" onchange="toast('Accès mis à jour','ok')"><option>Admin</option><option>Comptable</option><option>Déposant</option></select>
-            <select class="member-select" onchange="toast('Accès mis à jour','ok')"><option>Kajiflow</option><option>Sans org.</option></select>
+            <select class="member-select" onchange="toast('Aperçu uniquement — non enregistré','err')"><option>Admin</option><option>Comptable</option><option>Déposant</option></select>
+            <select class="member-select" onchange="toast('Aperçu uniquement — non enregistré','err')"><option>Kajiflow</option><option>Sans org.</option></select>
             <span class="member-access">ACCÈS ACTIF</span>
           </div>
         </div>
@@ -1509,16 +1509,16 @@ function validateItem(id){
   if(!b) return;
   b.status='completed';b.score=85;
   updateStats();renderHistory();renderDashList();renderQueue();
-  toast('Décision enregistrée','ok');
-  addNotif('matching_result','Matching validé','La ligne a été marquée comme traitée et les compteurs ont été actualisés.');
+  toast('Marqué comme traité sur cet écran','ok');
+  addNotif('matching_result','Marqué comme traité','Visible sur cet écran uniquement : la validation n\'est pas encore enregistrée en base.');
 }
 function fixItem(id){
   const b=BORDEREAUX.find(x=>x.id===id);
   if(!b) return;
   b.status='needs_correction';
   updateStats();renderHistory();renderDashList();renderQueue();
-  toast('Correction demandée','ok');
-  addNotif('correction_requested','Correction demandée','Le déposant a été notifié.');
+  toast('Correction notée sur cet écran','ok');
+  addNotif('correction_requested','Correction à demander','Prévenez le déposant directement : il n\'est pas notifié automatiquement.');
 }
 
 // ─── HISTORY ──────────────────────────────────────────────
@@ -1611,7 +1611,7 @@ function createOrg(){
   </div>`;
   document.getElementById('org-name').value='';
   document.getElementById('org-code').value='';
-  toast('Organisation créée','ok');
+  toast('Aperçu uniquement — organisation non enregistrée','err');
 }
 
 // ─── PROGRESS ─────────────────────────────────────────────
